@@ -1,0 +1,85 @@
+﻿@page "/Employee"
+@model Q2.Pages.Employees.IndexModel
+@{
+}
+
+<h1>Index</h1>
+
+<p>
+    <a href="/Employees/Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees[0].EmployeeId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees[0].FirstName)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="employeeTable">
+        @foreach (var item in Model.Employees)
+        {
+            <tr id="@item.EmployeeId">
+                <td>
+                    @Html.DisplayFor(modelItem => item.EmployeeId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FirstName)
+                </td>
+                <td>
+                    <a href="/Employees/Delete?id=@item.EmployeeId">Delete</a> |
+                    <a href="/Employees/Edit?id=@item.EmployeeId">Edit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/employeeHub").build();
+    connection.start();
+
+    connection.on("DeleteEmployee", function (id) {
+        const row = document.getElementById(id);
+        if (row) {
+            row.remove();
+            console.log("EmployeeId", id);
+        }
+    });
+
+    connection.on("CreatedNewEmployee", function (employee) {
+        console.log("Create", employee);
+        const tbody = document.getElementById("employeeTable");
+
+        const newRow = document.createElement('tr');
+        newRow.id = employee.employeeId;
+
+        const cell1 = document.createElement('td');
+        cell1.innerText = employee.employeeId;
+        newRow.appendChild(cell1);
+
+        const cell2 = document.createElement('td');
+        cell2.innerText = employee.firstName;
+        newRow.appendChild(cell2);
+
+        const cell3 = document.createElement('td');
+        cell3.innerHTML = `<a href="/Employees/Delete?id=${employee.employeeId}">Delete</a> | <a href="/Employees/Edit?id=${employee.employeeId}">Edit</a>`;
+        newRow.appendChild(cell3);
+
+        tbody.appendChild(newRow);
+    });
+
+    connection.on("UpdateEmployee", function (employee) {
+        console.log("Update", employee);
+        const eTr = document.getElementById(employee.employeeId);
+        if (eTr) {
+            eTr.children[0].innerText = employee.employeeId;
+            eTr.children[1].innerText = employee.firstName;
+        }
+    });
+</script>
